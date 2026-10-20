@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Phishing Awareness Inbox</title>
+<style>
+:root{--bg:#eef1f5;--surf:#fff;--ink:#1f2933;--mute:#66717f;--line:#dde2e8;--sel:#e3eefe;--accent:#1a5fd0;--bad:#c5221f;--hl:#fff0b8;--btn:#1a73e8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151c;--surf:#1a222c;--ink:#e8edf3;--mute:#98a4b3;--line:#2c3744;--sel:#22344d;--accent:#6aa8ff;--bad:#ff7b76;--hl:#554812;--btn:#3b82f0;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10151c;--surf:#1a222c;--ink:#e8edf3;--mute:#98a4b3;--line:#2c3744;--sel:#22344d;--accent:#6aa8ff;--bad:#ff7b76;--hl:#554812;--btn:#3b82f0;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Roboto,"Segoe UI",Arial,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surf);border-bottom:1px solid var(--line)}
+header h1{font-size:17px;margin:0;font-weight:600}
+.note{font-size:12px;color:var(--mute);padding:6px 16px;background:var(--surf);border-bottom:1px solid var(--line)}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.score{font-weight:600;font-size:14px}
+button{font:inherit;font-size:14px;cursor:pointer;border:1px solid var(--accent);color:var(--accent);background:transparent;padding:6px 12px;border-radius:6px}
+button:focus-visible,.spot:focus-visible,.item:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.app{display:grid;grid-template-columns:320px 1fr;max-width:1200px;margin:0 auto;min-height:calc(100vh - 100px)}
+.list{border-right:1px solid var(--line);background:var(--surf)}
+.item{padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;display:block}
+.item.sel{background:var(--sel)}
+.item .f{font-weight:700;font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.item .t{font-size:12px;font-weight:400;color:var(--mute);white-space:nowrap}
+.item .s{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .p{font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .c{font-size:11px;color:var(--mute)}
+.item.done .c{color:#188038;font-weight:600}
+.pane{background:var(--surf);position:relative;min-width:0}
+.subj{font-size:21px;margin:0;padding:16px 20px 6px;font-weight:400}
+.meta{display:flex;gap:12px;padding:8px 20px 12px;align-items:flex-start}
+.av{width:40px;height:40px;border-radius:50%;flex:none;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+.who{font-size:14px;min-width:0;overflow-wrap:anywhere}.who b{font-weight:700}.who small{color:var(--mute);display:block;font-size:12.5px}
+.body{padding:4px 20px 20px;max-width:640px}
+.body p{margin:0 0 12px}
+s{text-decoration:none}
+.spot{cursor:pointer;border-radius:2px;text-decoration:none}
+.hint .spot{border-bottom:1px dotted var(--mute)}
+.spot.found{background:var(--hl);border-bottom:2px solid var(--bad)!important}
+.btn{display:inline-block;background:var(--btn);color:#fff;padding:10px 22px;border-radius:4px;font-weight:600;text-decoration:none;margin:4px 0 12px}
+.att{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:4px 0 12px;font-size:13.5px}
+.foot{font-size:12px;color:var(--mute);border-top:1px solid var(--line);padding-top:10px;margin-top:8px}
+.status{position:sticky;bottom:0;min-height:28px;padding:5px 12px;font:12.5px ui-monospace,Consolas,monospace;background:var(--bg);border-top:1px solid var(--line);color:var(--mute);overflow-wrap:anywhere}
+.status.on{color:var(--bad)}
+.why{margin:0;padding:12px 20px 20px;border-top:1px solid var(--line);background:var(--bg)}
+.why h3{margin:0 0 6px;font-size:15px}.why ul{margin:0;padding-left:18px}.why li{margin:5px 0}.why b{color:var(--bad)}.why.ok b{color:#188038}
+@media (max-width:760px){.app{grid-template-columns:1fr}.list{border-right:0;border-bottom:1px solid var(--line)}}
+</style></head>
+<body>
+<header><h1>Inbox (8)</h1>
+<div class="tools"><span class="score" id="score"></span>
+<button id="hint">Show hints</button><button id="reveal">Reveal answers</button><button id="reset">Reset</button></div></header>
+<div class="note">Simulation for awareness training. Brand styling is imitated; every link here is non-functional. Click anything suspicious to flag it, and hover links to see their real destination.</div>
+<div class="app"><nav class="list" id="list" aria-label="Emails"></nav>
+<section class="pane" id="pane"></section></div>
+<script>
+var E=[
+{n:"State Bank Alerts",a:"alerts@sbi-kyc-update.in",t:"9:42 AM",c:"#1a5fb4",
+subj:'<s data-f="urgency">Action Required: Your account will be blocked within 24 hours</s>',
+prev:"Dear Customer, your KYC verification is pending…",
+body:'<p><s data-f="greeting">Dear Customer,</s></p><p>As per the latest RBI guidelines, your KYC verification is pending. Your PAN card is not linked with your account. <s data-f="urgency">Failure to update within 24 hours will result in your account being temporarily restricted.</s></p><p>Please complete your verification immediately to continue enjoying uninterrupted banking services.</p><a href="#" class="btn spot" data-f="link" data-real="http://onlinesbi-kyc-verify.in/login?ref=9f2c1">Update KYC Now</a><p>Keep your <s data-f="ask">Customer ID, Net Banking password, PAN, Aadhaar and OTP</s> ready.</p><p>Thank you for banking with us.<br>Customer Care Team</p><div class="foot">This is an auto-generated email. Please do not reply. © State Bank. All rights reserved.</div>',
+addr:"alerts@sbi-kyc-update.in",
+fl:{sender:"The address is sbi-kyc-update.in, not the bank’s real domain. Banks don’t send alerts from look-alike domains.",urgency:"A 24-hour blocking threat is designed to make you panic and skip checking.",greeting:"Your bank knows your name. “Dear Customer” means a mass mailing.",link:"The button leads to onlinesbi-kyc-verify.in, a copy of the login page built to steal your credentials.",ask:"No bank asks for your password or OTP through an email link. Ever."}},
+{n:"India Post",a:"tracking@indiapost-redelivery.com",t:"8:15 AM",c:"#c0392b",
+subj:'Package on hold: <s data-f="ask">₹29 redelivery fee</s> required',
+prev:"Your parcel could not be delivered due to an incomplete address…",
+body:'<p><s data-f="greeting">Dear Customer,</s></p><p>We attempted to deliver your parcel <b>IN4471903826</b> today, but the address provided was incomplete.</p><p>To schedule redelivery, please confirm your address and pay a small <s data-f="ask">redelivery fee of ₹29</s>. <s data-f="urgency">Parcels not claimed within 48 hours will be returned to the sender.</s></p><p><a href="#" class="spot" data-f="link" data-real="https://bit.ly/3xK9pLm" style="color:var(--accent)">https://bit.ly/3xK9pLm</a></p><p>Regards,<br>Delivery Support</p><div class="foot">Do not share this link with anyone.</div>',
+addr:"tracking@indiapost-redelivery.com",
+fl:{sender:"A government postal service wouldn’t email from indiapost-redelivery.com.",ask:"The tiny fee is the trick. The payment page captures your full card details and OTP.",greeting:"No name, no address, and no mention of what you ordered.",urgency:"A short deadline stops you from checking the tracking number on the official site.",link:"A shortened link hides the real destination. Legitimate couriers use their own domain."}},
+{n:"Amazon.in Offers",a:"offers@amzn-deals-india.com",t:"Yesterday",c:"#e68a00",
+subj:'<s data-f="price">You’ve been selected: iPhone 18 Pro (1 TB) for ₹9,999</s>',
+prev:"Exclusive Prime member reward. Offer expires in 2 hours…",
+body:'<p><s data-f="greeting">Hello Valued Customer,</s></p><p>Congratulations! As part of our festive loyalty programme, you’ve been selected to receive the <b>Apple iPhone 18 Pro (1 TB)</b> at an exclusive price of <s data-f="price">₹9,999</s> (M.R.P. ₹2,39,900).</p><p><s data-f="urgency">Only 3 units left. Offer expires in 2 hours.</s></p><a href="#" class="btn spot" data-f="link" data-real="http://secure-amazon-payments.in/checkout?item=iphone18pro&amp;sid=9f4d7" style="background:#f0a500;color:#111">Claim your reward</a><p>Hurry. After checkout, delivery is free.</p><div class="foot">You received this email because you are a registered customer. Unsubscribe.</div>',
+addr:"offers@amzn-deals-india.com",
+fl:{sender:"amzn-deals-india.com is not an Amazon domain, even though the display name says Amazon.",price:"A ₹2,39,900 phone for ₹9,999 isn’t a promotion. It’s bait.",greeting:"“Valued Customer” again: the sender doesn’t know who you are.",urgency:"Fake scarcity (3 units, 2 hours) pushes an impulse click.",link:"The checkout lives on secure-amazon-payments.in. The brand name is inside someone else’s domain, and the sid code tracks you."}},
+{n:"Netflix",a:"billing@netflix-account-support.com",t:"Mon",c:"#b81d24",
+subj:'<s data-f="urgency">Payment declined: update billing to avoid suspension</s>',
+prev:"We’re having some trouble with your current billing information…",
+body:'<p>Hi <s data-f="greeting">Member</s>,</p><p>We’re having some trouble with your current billing information. We’ll try again, but in the meantime you may want to update your payment details.</p><p><s data-f="urgency">Your membership will be suspended in 24 hours if the payment is not resolved.</s></p><a href="#" class="btn spot" data-f="link" data-real="https://netflix-account-support.com/update-payment" style="background:#e50914">UPDATE PAYMENT</a><p>Need help? Visit the Help Centre or contact us.</p><div class="foot">This message was mailed to you because your account is on hold. Questions? Call 000-800-919-1694.</div>',
+addr:"billing@netflix-account-support.com",
+fl:{sender:"The real service uses its own domain. “-account-support.com” is added to look official.",urgency:"Suspension in 24 hours: a classic pressure move.",greeting:"A real billing notice shows your name or the last digits of your card.",link:"The URL looks plausible at a glance, but it’s not the company’s domain. Go to the app or website yourself instead."}},
+{n:"Rajesh Menon (CEO)",a:"rajesh.menon.ceo@gmail.com",t:"11:03 AM",c:"#5f6b7a",
+subj:'<s data-f="urgency">Quick favour, are you at your desk?</s>',
+prev:"I’m in a meeting and can’t take calls. Need you to handle something…",
+body:'<p>Hi,</p><p>Are you available? I’m in back-to-back meetings and <s data-f="nocall">can’t take calls</s>. I need a quick favour and I need it done discreetly.</p><p>I want to surprise some of our key clients with gift cards. Can you <s data-f="ask">purchase 5 Amazon gift cards of ₹5,000 each</s> and send me the codes here? I’ll reimburse you by end of day.</p><p><s data-f="secret">Please keep this between us for now</s> and reply as soon as you see this.</p><p>Thanks,<br>Rajesh</p><div class="foot">Sent from my iPhone</div>',
+addr:"rajesh.menon.ceo@gmail.com",
+fl:{sender:"The name matches your CEO, but the address is a free Gmail account, not the company email.",urgency:"“Are you at your desk?” is a classic opener to start a conversation before the ask.",nocall:"“Can’t take calls” removes your easiest way to verify the request.",ask:"Gift cards are untraceable and a favourite of scammers. Real executives don’t ask staff to buy them.",secret:"Secrecy stops you from checking with colleagues. There’s no link here, yet it’s still a phish."}},
+{n:"PayPal",a:"service@paypal-billing-center.com",t:"Sun",c:"#003087",reply:"dispute-desk@paypal-resolution.com",
+subj:'Receipt for your payment of ₹49,999.00 to Zentek Digital Pvt. Ltd.',
+prev:"You sent a payment. If you did not authorize this, call us…",
+body:'<p><s data-f="greeting">Hello Customer,</s></p><p>You sent a payment of <b>₹49,999.00 INR</b> to <b>Zentek Digital Pvt. Ltd.</b></p><p>Transaction ID: 7HK29340MN<br>Date: 11 October 2026<br>Payment method: Linked bank account</p><p>If you did not authorize this payment, <s data-f="phone">call our Resolution Centre immediately on +1 (888) 555-0147</s> to cancel it. <s data-f="urgency">Disputes can only be accepted within 24 hours of the transaction.</s></p><p>Thanks for using our service.<br>Billing Support Team</p><div class="foot">Copyright © 2026 PayPal, Inc. All rights reserved. Please do not reply to this email.</div>',
+addr:"service@paypal-billing-center.com",
+fl:{sender:"The real company sends from its own domain. paypal-billing-center.com is a look-alike.",reply:"Look at the header: replies go to paypal-resolution.com, a different domain from the sender’s.",greeting:"A real receipt uses the name on your account.",phone:"There is no link, only a phone number. Calling it connects you to a scammer who asks for your login, OTP or remote access to your device. This is called callback phishing.",urgency:"A 24-hour dispute window makes you call before checking your real account."}},
+{n:"DHL Express",a:"shipping@dhl-express-docs.com",t:"Sat",c:"#d40511",
+subj:'Shipping documents required for your consignment: <s data-f="urgency">customs hold</s>',
+prev:"Your international shipment is on hold. Open the attached documents…",
+body:'<p><s data-f="greeting">Dear Customer,</s></p><p>An international consignment addressed to you has arrived at our hub and is currently on <s data-f="urgency">customs hold</s>. <s data-f="unexp">The sender and contents are not listed on this notice.</s></p><p>Please open the attached shipping documents, verify your details and sign in to release the parcel. <s data-f="urgency">Unclaimed shipments are returned within 48 hours.</s></p><div class="att"><span>📎</span><span><s data-f="att">AWB_Shipping_Docs.html</s> (41 KB)</span></div><p>Kind regards,<br>DHL Express Customer Service</p><div class="foot">This message and any attachments are confidential. If you are not the intended recipient, please delete it.</div>',
+addr:"shipping@dhl-express-docs.com",
+fl:{sender:"dhl-express-docs.com is not the company’s real domain. The brand name is just placed inside a different one.",att:"An .html attachment opens a fake sign-in page in your browser. Be wary of .html, .zip, .iso and double extensions like .pdf.exe.",urgency:"A customs hold and a 48-hour return deadline push you to open the file without thinking.",greeting:"A real courier notice would include your name and a tracking number.",unexp:"You aren’t expecting any international parcel, and no sender or contents are named. An unexpected shipment notice is a warning on its own."}},
+{legit:1,n:"Amazon.in",a:"auto-confirm@amazon.in",t:"Fri",c:"#232f3e",
+subj:'Your order #408-1234567-8901234 has been placed',
+prev:"Hello Arjun, thank you for your order. We’ll send a confirmation when it ships…",
+body:'<p>Hello <s data-f="name">Arjun</s>,</p><p>Thank you for your order. We’ll send you another email when your item has shipped.</p><p><b>Boat Airdopes 141 Bluetooth Earbuds</b><br>Quantity: 1<br>Item subtotal: ₹1,099.00<br>Arriving: Monday, 19 October</p><p><a href="#" class="spot" data-f="link" data-real="https://www.amazon.in/gp/your-account/order-details?orderID=408-1234567-8901234" style="color:var(--accent)">View or manage your order</a></p><p><s data-f="calm">There is nothing you need to do right now.</s> You can check this order any time in Your Orders on the website or app.</p><div class="foot">We hope to see you again soon. Amazon.in</div>',
+addr:"auto-confirm@amazon.in",
+fl:{sender:"The address ends in the company’s real domain, amazon.in, with nothing added before or after it.",name:"It uses your real name and matches an order you actually placed. If you didn’t order this, go to the site yourself instead of clicking.",link:"Hover shows the destination is on the real domain, in a normal account path, with no look-alike spelling.",calm:"No urgency, no threat, no request for a password, OTP, card or payment. It simply informs you."}}
+];
+var cur=0,found={},hint=false;
+var $=function(i){return document.getElementById(i)};
+function strip(h){var d=document.createElement("div");d.innerHTML=h;return d.textContent}
+function tot(i){return Object.keys(E[i].fl).length}
+function cnt(i){return Object.keys(found[i]||{}).length}
+function score(){var f=0,t=0;E.forEach(function(e,i){if(e.legit)return;f+=cnt(i);t+=tot(i)});$("score").textContent="Flags found: "+f+" / "+t}
+function renderList(){$("list").innerHTML=E.map(function(e,i){return'<a class="item'+(i==cur?' sel':'')+(cnt(i)==tot(i)?' done':'')+'" tabindex="0" data-i="'+i+'"><div class="f"><span>'+e.n+'</span><span class="t">'+e.t+'</span></div><div class="s">'+strip(e.subj)+'</div><div class="p">'+e.prev+'</div><div class="c">'+cnt(i)+' / '+tot(i)+(e.legit?' good signs':' flags')+'</div></a>'}).join("");
+document.querySelectorAll(".item").forEach(function(el){var go=function(){cur=+el.dataset.i;render()};el.onclick=go;el.onkeydown=function(e){if(e.key==="Enter")go()}})}
+function render(){var e=E[cur];found[cur]=found[cur]||{};
+var rep=e.reply?'<small>Reply-To: <s data-f="reply">'+e.reply+'</s></small>':'';
+$("pane").className="pane"+(hint?" hint":"");
+$("pane").innerHTML='<h2 class="subj">'+e.subj+'</h2><div class="meta"><div class="av" style="background:'+e.c+'">'+e.n[0]+'</div><div class="who"><b>'+e.n+'</b> &lt;<s data-f="sender">'+e.a+'</s>&gt;<small>to me</small>'+rep+'</div></div><div class="body">'+e.body+'</div><div class="status" id="st">Hover a link or button to preview its destination.</div><div class="why" id="why"></div>';
+$("pane").querySelectorAll("s,.spot").forEach(function(s){s.classList.add("spot");s.tabIndex=0;
+var f=s.dataset.f;var mk=function(ev){ev.preventDefault();if(e.fl[f]){found[cur][f]=1;sync()}};
+s.addEventListener("click",mk);s.addEventListener("keydown",function(ev){if(ev.key==="Enter")mk(ev)});
+if(s.dataset.real){var on=function(){$("st").textContent=s.dataset.real;$("st").classList.add("on")},off=function(){$("st").textContent="Hover a link or button to preview its destination.";$("st").classList.remove("on")};
+s.addEventListener("mouseenter",on);s.addEventListener("mouseleave",off);s.addEventListener("focus",on);s.addEventListener("blur",off)}});
+sync();renderList();score()}
+function sync(){var e=E[cur],fd=found[cur];
+$("pane").querySelectorAll("[data-f]").forEach(function(s){s.classList.toggle("found",!!fd[s.dataset.f])});
+var ks=Object.keys(e.fl).filter(function(k){return fd[k]});
+$("why").className="why"+(e.legit?" ok":"");$("why").style.display=ks.length?"block":"none";
+$("why").innerHTML=ks.length?'<h3>'+(e.legit?'Good signs':'Red flags')+' ('+ks.length+' / '+tot(cur)+')</h3><ul>'+ks.map(function(k){return'<li><b>'+k.replace(/^./,function(c){return c.toUpperCase()})+':</b> '+e.fl[k]+'</li>'}).join("")+'</ul>':"";
+renderList();score()}
+$("hint").onclick=function(){hint=!hint;$("pane").classList.toggle("hint",hint);this.textContent=hint?"Hide hints":"Show hints"};
+$("reveal").onclick=function(){found[cur]={};Object.keys(E[cur].fl).forEach(function(k){found[cur][k]=1});sync()};
+$("reset").onclick=function(){found={};cur=0;render()};
+render();
+</script></body></html>
