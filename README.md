@@ -2,7 +2,7 @@
 
 An interactive fake inbox that teaches people how to spot phishing emails. It was built for the **Wizztrace** awareness video.
 
-**Try it live:** https://github.com/wizztrace/phishing-awareness-simulator.git
+**Try it live:** https://wizztrace.github.io/phishing-awareness-simulator/
 
 ## What it is
 
